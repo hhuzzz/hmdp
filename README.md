@@ -10,16 +10,15 @@
 - [https://www.bilibili.com/video/BV1cr4y1671t](https://www.bilibili.com/video/BV1cr4y1671t)
   - P24起 实战篇
 
+参考资料:
+
++ [CSDN 黑马点评](https://blog.csdn.net/giveupgivedown/article/details/128723748)
+
 ## 1.下载
 克隆完整项目
 ```git
 git clone https://github.com/cs001020/hmdp.git
 ```
-切换分支
-```git
-git checkout init
-```
-
 ## 2.常见问题
 部分同学直接使用了master分支项目来启动，控制台会一直报错:
 ```
