@@ -2,6 +2,7 @@ package com.hmdp.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -124,7 +125,7 @@ public class CacheClient {
         //从redis中查询
         String json = stringRedisTemplate.opsForValue().get(key);
         //判断是否存在
-        if (StringUtils.isEmpty(json)) {
+        if (StrUtil.isEmpty(json)) {
             //不存在返回空
             return null;
         }
