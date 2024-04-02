@@ -61,38 +61,45 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     //    private static final BlockingQueue<VoucherOrder> orderTasks=new ArrayBlockingQueue<>(1024*1024);
     private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
 
+    /**
+     * 初始化方法，用于在对象构造完成后执行一次性的初始化操作。
+     * 该方法利用Redis Stream处理秒杀订单的消费逻辑。
+     * 通过持续从消息队列中读取消息并处理，实现了订单的异步处理。
+     */
     @PostConstruct
     private void init() {
         SECKILL_ORDER_EXECUTOR.submit(() -> {
             String queueName="stream.orders";
             while (true) {
                 try {
-                    //从消息队列中获取订单信息
+                    // 从Redis Stream中读取消息
                     List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
                             Consumer.from("g1", "c1")
                             , StreamReadOptions.empty().count(1).block(Duration.ofSeconds(2))
                             , StreamOffset.create(queueName, ReadOffset.lastConsumed())
                     );
-                    //判断消息时候获取成功
+                    // 判断是否成功获取到消息
                     if (list==null||list.isEmpty()){
-                        //获取失败 没有消息 继续循环
+                        // 若未获取到消息，则继续尝试
                         continue;
                     }
-                    //获取成功 解析消息
+                    // 处理获取到的消息
                     MapRecord<String, Object, Object> record = list.get(0);
                     Map<Object, Object> values = record.getValue();
                     VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(values, new VoucherOrder(), true);
-                    //下单
+                    // 调用处理订单的逻辑
                     handleVoucherOrder(voucherOrder);
-                    //ack确认消息
+                    // 确认消息已被处理
                     stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
                 } catch (Exception e) {
+                    // 处理异常情况，例如将订单加入重试列表
                     e.printStackTrace();
                     handlePendingList();
                 }
             }
         });
     }
+
 
     private void handlePendingList() {
         String queueName="stream.orders";
