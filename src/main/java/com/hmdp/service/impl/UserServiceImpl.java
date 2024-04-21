@@ -12,7 +12,6 @@ import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
-import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -31,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hmdp.utils.RedisConstants.*;
-import static com.hmdp.utils.SystemConstants.*;
+import static com.hmdp.utils.SystemConstants.USER_NICK_NAME_PREFIX;
 
 
 /**
@@ -118,11 +116,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LocalDateTime now = LocalDateTime.now();
         //拼接key
         String yyyyMM = now.format(DateTimeFormatter.ofPattern("yyyy:MM:"));
-        String key = USER_SIGN_KEY +yyyyMM+ id;
+        String key = USER_SIGN_KEY + yyyyMM + id;
         //获取今天是本月的第几天
         int dayOfMonth = now.getDayOfMonth();
         //写了redis
-        stringRedisTemplate.opsForValue().setBit(key,dayOfMonth-1,true);
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);
         return Result.ok();
     }
 
@@ -134,7 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LocalDateTime now = LocalDateTime.now();
         //拼接key
         String yyyyMM = now.format(DateTimeFormatter.ofPattern("yyyy:MM:"));
-        String key = USER_SIGN_KEY +yyyyMM+ id;
+        String key = USER_SIGN_KEY + yyyyMM + id;
         //获取今天是本月的第几天
         int dayOfMonth = now.getDayOfMonth();
         //获取截至本月今天的所有签到记录
@@ -145,22 +143,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                                 .unsigned(dayOfMonth))
                         .valueAt(0)
         );
-        if (result==null||result.isEmpty()){
+        if (result == null || result.isEmpty()) {
             return Result.ok(0);
         }
         Long num = result.get(0);
-        if (num==null||num==0){
+        if (num == null || num == 0) {
             return Result.ok(0);
         }
         //转二进制字符串
         String binaryString = Long.toBinaryString(num);
         //计算连续签到天数
-        int count=0;
-        for (int i = binaryString.length()-1; i >=0; i--) {
-            if (binaryString.charAt(i)=='1'){
+        int count = 0;
+        for (int i = binaryString.length() - 1; i >= 0; i--) {
+            if (binaryString.charAt(i) == '1') {
                 count++;
-            }
-            else {
+            } else {
                 break;
             }
         }

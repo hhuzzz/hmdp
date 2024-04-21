@@ -30,7 +30,8 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * <p>
@@ -43,6 +44,16 @@ import java.util.concurrent.*;
 @Service
 @Slf4j
 public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, VoucherOrder> implements IVoucherOrderService {
+    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
+    //    private static final BlockingQueue<VoucherOrder> orderTasks=new ArrayBlockingQueue<>(1024*1024);
+    private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+
+    static {
+        SECKILL_SCRIPT = new DefaultRedisScript<>();
+        SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
+        SECKILL_SCRIPT.setResultType(Long.class);
+    }
+
     @Resource
     private ISeckillVoucherService seckillVoucherService;
     @Resource
@@ -57,9 +68,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     @Lazy
     private IVoucherOrderService voucherOrderService;
-    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
-    //    private static final BlockingQueue<VoucherOrder> orderTasks=new ArrayBlockingQueue<>(1024*1024);
-    private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
 
     /**
      * 初始化方法，用于在对象构造完成后执行一次性的初始化操作。
@@ -69,7 +77,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @PostConstruct
     private void init() {
         SECKILL_ORDER_EXECUTOR.submit(() -> {
-            String queueName="stream.orders";
+            String queueName = "stream.orders";
             while (true) {
                 try {
                     // 从Redis Stream中读取消息
@@ -79,7 +87,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                             , StreamOffset.create(queueName, ReadOffset.lastConsumed())
                     );
                     // 判断是否成功获取到消息
-                    if (list==null||list.isEmpty()){
+                    if (list == null || list.isEmpty()) {
                         // 若未获取到消息，则继续尝试
                         continue;
                     }
@@ -90,7 +98,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     // 调用处理订单的逻辑
                     handleVoucherOrder(voucherOrder);
                     // 确认消息已被处理
-                    stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
+                    stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
                 } catch (Exception e) {
                     // 处理异常情况，例如将订单加入重试列表
                     e.printStackTrace();
@@ -100,10 +108,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         });
     }
 
-
     private void handlePendingList() {
-        String queueName="stream.orders";
-        while (true){
+        String queueName = "stream.orders";
+        while (true) {
             try {
                 //从消息队列中获取订单信息
                 List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
@@ -112,7 +119,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                         , StreamOffset.create(queueName, ReadOffset.from("0"))
                 );
                 //判断消息时候获取成功
-                if (list==null||list.isEmpty()){
+                if (list == null || list.isEmpty()) {
                     //获取失败 没有消息 继续循环
                     break;
                 }
@@ -123,7 +130,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 //下单
                 handleVoucherOrder(voucherOrder);
                 //ack确认消息
-                stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
+                stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
             } catch (Exception e) {
                 e.printStackTrace();
                 try {
@@ -153,12 +160,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             lock.unlock();
         }
 
-    }
-
-    static {
-        SECKILL_SCRIPT = new DefaultRedisScript<>();
-        SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));
-        SECKILL_SCRIPT.setResultType(Long.class);
     }
 
     /**

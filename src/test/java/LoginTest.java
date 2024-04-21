@@ -7,14 +7,14 @@ import com.hmdp.HmDianPingApplication;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
-import com.hmdp.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +35,8 @@ public class LoginTest {
      * 生成1000名用户
      */
     @Test
-    public void testGenerateUser(){
-        Long phone=17600000000L;
+    public void testGenerateUser() {
+        Long phone = 17600000000L;
         for (int i = 0; i < 1000; i++) {
             User user = new User();
             user.setPhone(phone.toString());
@@ -56,9 +56,9 @@ public class LoginTest {
     @Test
     public void testLogin() throws IOException {
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.gt(true,User::getId,1011L);
+        userLambdaQueryWrapper.gt(true, User::getId, 1011L);
         List<User> users = userMapper.selectList(userLambdaQueryWrapper);
-        File tokens=new File("D:\\Downloads\\apache-jmeter-5.5\\test\\tokens.txt");
+        File tokens = new File("D:\\Downloads\\apache-jmeter-5.5\\test\\tokens.txt");
         FileOutputStream fileOutputStream = new FileOutputStream(tokens);
         for (User user : users) {
             String token = UUID.randomUUID().toString(true);

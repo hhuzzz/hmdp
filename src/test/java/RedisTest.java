@@ -1,28 +1,16 @@
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.json.JSONUtil;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hmdp.HmDianPingApplication;
 import com.hmdp.entity.Shop;
-import com.hmdp.entity.Voucher;
 import com.hmdp.service.impl.ShopServiceImpl;
 import com.hmdp.utils.CacheClient;
-import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisIdWorker;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.domain.geo.GeoLocation;
-import org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean;
 
 import javax.annotation.Resource;
-import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -31,7 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.*;
+import static com.hmdp.utils.RedisConstants.CACHE_SHOP_KEY;
+import static com.hmdp.utils.RedisConstants.SHOP_GEO_KEY;
 
 @SpringBootTest(classes = HmDianPingApplication.class)
 public class RedisTest {
@@ -86,7 +75,7 @@ public class RedisTest {
             Long typeId = longListEntry.getKey();
             //获取店铺集合
             List<Shop> value = longListEntry.getValue();
-            List<RedisGeoCommands.GeoLocation<String>> locations=new ArrayList<>(value.size());
+            List<RedisGeoCommands.GeoLocation<String>> locations = new ArrayList<>(value.size());
             //写入redis
             String key = SHOP_GEO_KEY + typeId;
             /*for (Shop shop : value) {
@@ -98,21 +87,21 @@ public class RedisTest {
                                 , shop.getId().toString());
             }*/
             for (Shop shop : value) {
-                locations.add(new RedisGeoCommands.GeoLocation<>(shop.getId().toString(),new Point(shop.getX(),shop.getY())));
+                locations.add(new RedisGeoCommands.GeoLocation<>(shop.getId().toString(), new Point(shop.getX(), shop.getY())));
             }
-            stringRedisTemplate.opsForGeo().add(key,locations);
+            stringRedisTemplate.opsForGeo().add(key, locations);
         }
     }
 
     @Test
-    public void testHyperLogLog(){
-        String[] values=new String[1000];
-        int j=0;
+    public void testHyperLogLog() {
+        String[] values = new String[1000];
+        int j = 0;
         for (int i = 0; i < 1000000; i++) {
-            j=i%1000;
-            values[j]="user_"+i;
-            if (j==999){
-                stringRedisTemplate.opsForHyperLogLog().add("hl1",values);
+            j = i % 1000;
+            values[j] = "user_" + i;
+            if (j == 999) {
+                stringRedisTemplate.opsForHyperLogLog().add("hl1", values);
             }
         }
         Long hl1 = stringRedisTemplate.opsForHyperLogLog().size("hl1");

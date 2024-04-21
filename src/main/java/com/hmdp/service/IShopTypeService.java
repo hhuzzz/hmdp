@@ -6,7 +6,7 @@ import com.hmdp.entity.ShopType;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author 虎哥

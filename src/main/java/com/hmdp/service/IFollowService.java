@@ -6,7 +6,7 @@ import com.hmdp.entity.Follow;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author 虎哥

@@ -5,7 +5,7 @@ import com.hmdp.entity.BlogComments;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author 虎哥

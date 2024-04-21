@@ -29,6 +29,10 @@ import static com.hmdp.utils.RedisConstants.*;
 @Slf4j
 @Component
 public class CacheClient {
+    /**
+     * 简易线程池
+     */
+    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
     private final StringRedisTemplate stringRedisTemplate;
 
     @Autowired
@@ -151,7 +155,7 @@ public class CacheClient {
                     //查询数据库
                     R newR = dbFallback.apply(id);
                     //写入redis
-                    this.setWithLogicalExpire(key,newR,time,unit);
+                    this.setWithLogicalExpire(key, newR, time, unit);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 } finally {
@@ -163,11 +167,6 @@ public class CacheClient {
         //返回过期商铺信息
         return r;
     }
-
-    /**
-     * 简易线程池
-     */
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
 
     /**
      * 获取锁

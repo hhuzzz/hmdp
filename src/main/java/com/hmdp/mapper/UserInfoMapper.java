@@ -5,7 +5,7 @@ import com.hmdp.entity.UserInfo;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author 虎哥
