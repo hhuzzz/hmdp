@@ -176,7 +176,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 os = 1;
             }
         }
-        //根据 查询blog
+        //根据id查询blog
         List<Blog> blogs = new ArrayList<>(ids.size());
         for (Long id : ids) {
             Blog blog = getById(id);
