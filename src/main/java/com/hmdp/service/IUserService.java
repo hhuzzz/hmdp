@@ -5,6 +5,7 @@ import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.User;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -24,7 +25,7 @@ public interface IUserService extends IService<User> {
      * @param session 会话
      * @return {@link Result}
      */
-    Result sendCode(String phone, HttpSession session);
+    Result sendCode(String phone, HttpSession session) throws MessagingException;
 
     /**
      * 登录
